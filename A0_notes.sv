@@ -77,3 +77,43 @@ class dut_mem1 extends uvm_mem;
   endfunction //new()
   
 endclass //dut_mem1 extends uvm_mem
+
+
+
+********************Section 2: Adding Register Blocks********************
+
+// Refer img_040.png
+
+Reg block will be exteded from uvm_reg_block base class
+
+class reg_block0 extends uvm_reg_block;
+  `uvm_object_utils(reg_block0)
+
+  // register declaration
+  rand reg1 reg1_instance; // register object declaration, this will be used to create register object in build function
+  rand reg2 reg2_instance; // register object declaration, this will be used to create register object in build function
+
+  function new(string name = "reg_block0");
+    super.new(name, UVM_NO_COVERAGE);
+  endfunction
+  
+  function void build();
+    reg1_instance = reg1::type_id::create("reg1_instance", this); // create register object and pass parent block as argument
+    reg1_instance.build(); // call build function to create fields
+    reg1_instance.configure(this); // configure register to specify parent block
+
+    reg2_instance = reg2::type_id::create("reg2_instance", this); // create register object and pass parent block as argument
+    reg2_instance.build(); // call build function to create fields
+    reg2_instance.configure(this); // configure register to specify parent block
+
+
+    //create address map
+    default_map = create_map("default_map", 0, 4, UVM_LITTLE_ENDIAN); // name, base address, byte width, endianness
+    
+    //start adding registers to address map
+    default_map.add_reg(reg1_instance, `h0, "RW"); //instance name, offset address, access policy
+    default_map.add_reg(reg2_instance, `h4, "RW"); 
+
+    lock_model(); // lock the model to prevent further modifications, this is optional but recommended to avoid accidental changes
+  endfunction
+endclass
