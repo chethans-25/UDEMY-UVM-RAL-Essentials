@@ -32,7 +32,7 @@ class reg0 extends uvm_reg;
   
   // build function to create fields
   function void build();
-    slv_reg0 = uvm_reg_field::type_id::create("slv_reg0", this);
+    slv_reg0 = uvm_reg_field::type_id::create("slv_reg0");
 
     //registers need to be configured to specify the field position, access type, volatile etc
     slv_reg0.configure(
@@ -98,11 +98,11 @@ class reg_block0 extends uvm_reg_block;
   endfunction
   
   function void build();
-    reg1_instance = reg1::type_id::create("reg1_instance", this); // create register object and pass parent block as argument
+    reg1_instance = reg1::type_id::create("reg1_instance"); // create register object 
     reg1_instance.build(); // call build function to create fields
     reg1_instance.configure(this); // configure register to specify parent block
 
-    reg2_instance = reg2::type_id::create("reg2_instance", this); // create register object and pass parent block as argument
+    reg2_instance = reg2::type_id::create("reg2_instance"); // create register object 
     reg2_instance.build(); // call build function to create fields
     reg2_instance.configure(this); // configure register to specify parent block
 
@@ -137,7 +137,7 @@ read(status, variable_to_store_data);
 3) call adapter method to convert reg transaction to bus transaction //reg2bus or bus2reg method will be called based on the transaction type
 4) Update transaction //adapter will update the transaction with bus specific details like address, data, byte enable etc
 5) call driver method to send transaction to DUT
-6) Monitor will capture the bus transaction and call adapter method to convert bus transaction to reg transaction
+6) Monitor will capture the bus transaction and call adapter/predictor method to convert bus transaction to reg transaction
 7) Update Mirror + Desired value //adapter will update the mirror and desired value based on the bus transaction
 
 
@@ -152,7 +152,7 @@ data: value to be written to the register //'h4 in this case
 status: status of the transaction, it will be updated by the reg method based on the success or failure of the transaction //OK, FAIL, etc
 
 
-reg2bus comverts reg transaction to bus transaction
+reg2bus converts reg transaction to bus transaction
 
 function uvm_sequence_item reg2bus(uvm_reg_bus_op reg_op);
   // create bus transaction
