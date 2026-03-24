@@ -242,7 +242,7 @@ class apb_adapter extends uvm_adapter;
     return apb_bus_tr; // return the bus transaction
   endfunction
 
-  virtualfunction void bus2reg(uvm_seq_item bus_item, uvm_reg_bus_op reg_op);
+  virtual function void bus2reg(uvm_seq_item bus_item, uvm_reg_bus_op reg_op);
     apb_transaction apb_bus_tr;
 
     assert($cast(apb_bus_tr, bus_item)) else `uvm_fatal("APB_ADAPTER", "Failed to cast bus item to APB transaction"); // cast the bus item to bus transaction, this is optional but recommended to ensure that the bus item is of correct type
@@ -255,3 +255,34 @@ class apb_adapter extends uvm_adapter;
   endfunction
 endclass
 
+
+********************Section 4: Different Register Methods********************
+
+************
+Types of Predictor
+
+Implicit Predictor
+There will not be a separate predictor block, driver performs the predictor actions using bi-directional TLM ports
+Steps:
+1. generate reg data
+2. adapter: convert reg to bus tx
+3. send to driver
+4. Driver applies stim to dut
+5. Driver Collects response
+6. Reg model uses response to update desired/mirrored values
+//refer img_055.png
+
+Explicit Predictor
+Monitor will broadcast response to Predictor and Scoreboard, etc
+Predictor will update desired and mirrored values
+//refer img_056.png
+
+
+Passive Predictor
+reg sequence will not be. Bus sequence will be used
+monitor broadcasts the response to predictor and others
+Predictor will update desired and mirrored values
+//refer img_057.png
+
+************
+Driver Sequencer Communication
