@@ -286,3 +286,7 @@ Predictor will update desired and mirrored values
 
 ************
 Driver Sequencer Communication
+//refer code060.sv
+Only difference is sequence class will receive response from driver using get_response() method
+
+
