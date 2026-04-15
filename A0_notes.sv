@@ -290,3 +290,73 @@ Driver Sequencer Communication
 Only difference is sequence class will receive response from driver using get_response() method
 
 
+************
+Desired Value: Value of register for next transaction. Allows to specify value before write
+
+Mirrored Value: Current known value of hardware register. Updated at the end of each read/write
+
+Methods before Transaction: These methods do no perform any transaction with actual hardware
+Desired Value: Set and Get
+Mirrored Value: get_mirrored_value
+
+Methods after Transaction: Perform transaction with dut, hence update both desired and mirrored value
+Desired Value and Mirrored Value
+Frontdoor access: write, read, update, mirror, predict, randomize
+Backdoor access: peek, poke
+
+
+// implicit prediction
+default_map.set_auto_predict(1);//inside top_reg_block
+
+
+predict and mirror
+
+predict()
+updated the desired and mirrored value for the register
+returns true if the prediction was succesfull for each field of register
+won't be performing any transaction with dut
+
+mirror()
+read the register and update/check its mirror value
+
+
+read and write transaction
+
+write()
+Write the specified value in the register.
+will call predict method internally.
+
+read()
+read the current value from the register.
+will call predict method internally.
+
+
+//using randomize
+// value variable will be have random value
+regmodel.temp_reg_inst.randomize();
+regmodel.temp_reg_inst.write(status, regmodel.temp_reg_inst.temp.value);
+`uvm_info("SEQ", $sformatf("Random Value : %0d",regmodel.temp_reg_inst.temp.value), UVM_NONE);
+
+*********
+Reset Methods
+//will be used in register model only, do not apply to dut
+
+// has_reset()
+virtual function bit has_reset(string kind = "HARD", bit delete = 0)
+checks if any field in the reg has a reset value specified for the specified reset kind. If delete is True, removes the reset value.
+
+// set_reset()
+virtual function bit set_reset(uvm_reg_data_t value, string kind = "HARD")
+specify or modify the reset value of this register
+
+// get_reset()
+virtual function uvm_reg_data_t get_reset( string kind = "HARD")
+get the specified reset value for this register
+
+// reset()
+both mirror and desired value will be updated with specified value.
+
+**********
+Connecting Reset methods to DUT
+
+Whenever the dut is Reset, reg model reset() method needs to be called.
