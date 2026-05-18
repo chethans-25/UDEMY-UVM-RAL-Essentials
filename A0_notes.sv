@@ -279,7 +279,7 @@ Predictor will update desired and mirrored values
 
 
 Passive Predictor
-reg sequence will not be. Bus sequence will be used
+reg sequence will not be used. Bus sequence will be used
 monitor broadcasts the response to predictor and others
 Predictor will update desired and mirrored values
 //refer img_057.png
@@ -288,5 +288,32 @@ Predictor will update desired and mirrored values
 Driver Sequencer Communication
 //refer code060.sv
 Only difference is sequence class will receive response from driver using get_response() method
+
+
+// Desired vs Mirrored Values
+// Desired value is the expected value of the register field based on the stimulus applied to the DUT. It is calculated by the reg model based on the stimulus and the register behavior. Desired value is used for checking the correctness of the DUT response.
+
+// Mirrored value is the actual value of the register field in the reg model. It is updated based on the response received from the DUT. Mirrored value is used for checking the correctness of the DUT response and for updating the reg model state.
+
+
+// working with desired value
+// refer top_reg_seq in code_071.sv
+
+
+// working with desired value
+// get_mirrored_value() method is used to get the mirrored value of the register field
+
+default_map.set_auto_predict(1); // enable auto prediction for the address map, this will automatically update the desired value based on the stimulus applied to the DUT
+
+
+// Reset Methods
+// has_reset() method is used to check if the register field has reset value, this is optional but recommended to avoid unnecessary checks for fields that do not have reset value
+
+// get_reset() method is used to get the reset value of the register field, this is optional but recommended to avoid hardcoding reset values in the testbench
+
+// set_reset() method is used to set the reset value of the register field, this is optional but recommended to avoid hardcoding reset values in the testbench
+
+// reset() method is used to reset the register field to its reset value, this is optional but recommended to avoid hardcoding reset values in the testbench
+// both mirrored and desired values will be reset to the reset value of the field when reset() method is called
 
 
