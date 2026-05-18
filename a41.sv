@@ -1,4 +1,55 @@
-// Connecting Reset methods to DUT
+//Modify register sequence to perform ten read-after-write transactions on the register.
+
+//Design
+module top(
+  input clk, rst,
+  input wr,addr,
+  input [7:0] din,
+  output [7:0] dout
+);
+  
+  reg [7:0] tempin;
+  reg [7:0] tempout;
+  
+  always@(posedge clk)
+  begin
+    if(rst)
+    begin
+      tempin <= 8'h00;
+      tempout <= 8'h00;  
+    end  
+    else if (wr == 1'b1)
+    begin
+      if(addr == 1'b0)
+        tempin <= din;
+    end  
+    else if(wr == 1'b0)
+    if(addr == 1'b0)
+      tempout <= tempin;
+  end
+        
+  
+  assign dout = tempout;
+  
+endmodule
+ 
+ 
+//////////////////////////////////////
+ 
+interface top_if ;
+  
+  logic clk, rst;
+  logic wr;
+  logic addr;
+  logic [7:0] din;
+  logic [7:0] dout;
+  
+  
+endinterface
+
+
+//////////////////////////////////////
+
 import uvm_pkg::*;
 `include "uvm_macros.svh"
  
@@ -150,7 +201,7 @@ class temp_reg extends uvm_reg;
                      .lsb_pos(0), 
                      .access("RW"),  
                      .volatile(0), 
-                    .reset(8'h11), 
+                     .reset(0), 
                      .has_reset(1), 
                      .is_rand(1), 
                      .individually_accessible(1)); 
@@ -195,46 +246,31 @@ class top_reg_block extends uvm_reg_block;
 endclass
  
  
-/////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////Sequence code
  
-class rst_seq extends uvm_sequence;
+class top_reg_seq extends uvm_sequence;
  
-  `uvm_object_utils(rst_seq)
+  `uvm_object_utils(top_reg_seq)
   
    top_reg_block regmodel;
-    virtual top_if tif;
+  
    
-  function new (string name  = "rst_seq"); 
+  function new (string name = "top_reg_seq"); 
     super.new(name);    
   endfunction
   
-  
-  
-  
  
+ 
+///////////////////add sequence code here
   task body;  
-    uvm_status_e   status;
-    bit [7:0] rdata,rdata_m;
-    bit [7:0] rst_reg;
-    
-    //////getting access of interface
-    if(!uvm_config_db#(virtual top_if)::get(null,"uvm_test_top","tif",tif))
-        `uvm_error("SEQ","Unable to access Interface");
- 
-    
-     tif.rst  <= 1'b1;
-     tif.addr <= 1'b0;
-     tif.wr   <= 1'b0;
-     tif.din  <= 8'h00;
-     regmodel.temp_reg_inst.reset();
-     repeat(6) @(posedge tif.clk);
-     tif.rst <= 1'b0;
-     rdata =   regmodel.temp_reg_inst.get();
-     rdata_m = regmodel.temp_reg_inst.get_mirrored_value();
-    `uvm_info("SEQ", $sformatf("After Reset -> Mir : %0d Des : %0d ", rdata_m, rdata), UVM_NONE);         
+  
+  
   
   endtask
   
+ 
+ 
+ 
   
 endclass
  
@@ -327,64 +363,61 @@ endclass
  
  
 class test extends uvm_test;
-`uvm_component_utils(test)
+  `uvm_component_utils(test)
  
-function new(input string inst = "test", uvm_component c);
-super.new(inst,c);
-endfunction
+  function new(input string inst = "test", uvm_component c);
+    super.new(inst,c);
+  endfunction
  
-env e;
-rst_seq trseq;
+  env e;
+  top_reg_seq trseq;
  
  
   
-virtual function void build_phase(uvm_phase phase);
-super.build_phase(phase);
-   e      = env::type_id::create("env",this);
-   trseq  = rst_seq::type_id::create("trseq");
+  virtual function void build_phase(uvm_phase phase);
+    super.build_phase(phase);
+    e      = env::type_id::create("env",this);
+    trseq  = top_reg_seq::type_id::create("trseq");
   
-  // e.set_config_int( "*", "include_coverage", 0 );
-endfunction
+    // e.set_config_int( "*", "include_coverage", 0 );
+  endfunction
  
-virtual task run_phase(uvm_phase phase);
+  virtual task run_phase(uvm_phase phase);
   
-  phase.raise_objection(this);
+    phase.raise_objection(this);
   
-  trseq.regmodel = e.regmodel;
-  trseq.start(e.agent_inst.seqr);
-  phase.drop_objection(this);
+    trseq.regmodel = e.regmodel;
+    trseq.start(e.agent_inst.seqr);
+    phase.drop_objection(this);
   
-  phase.phase_done.set_drain_time(this, 200);
-endtask
+    phase.phase_done.set_drain_time(this, 200);
+  endtask
 endclass
  
 //////////////////////////////////////////////////////////////
  
  
 module tb;
-  
-    
+
   top_if tif();
     
   top dut (tif.clk, tif.rst, tif.wr, tif.addr, tif.din, tif.dout);
  
-  
-  initial begin
+  initial
+  begin
    tif.clk <= 0;
   end
  
   always #10 tif.clk = ~tif.clk;
- 
   
-  
-  initial begin
+  initial
+  begin
     uvm_config_db#(virtual top_if)::set(null, "*", "tif", tif);
     
     uvm_config_db#(int)::set(null,"*","include_coverage", 0); //to remove include coverage message
  
     run_test("test");
-   end
-  
+  end
   
   initial begin
     $dumpfile("dump.vcd");
